@@ -12,6 +12,8 @@
     "execa": "^0.8.0",
     "get-stream": "^3.0.0",
     "inquirer": "^4.0.1",
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.4",
+    "semver": "^7.0.0",
+    "strip-ansi": "^6.0.0"
   }
 }

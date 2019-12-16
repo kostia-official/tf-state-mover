@@ -1,13 +1,21 @@
 #!/usr/bin/env node
 
-const inquirer = require('inquirer');
 const execa = require('execa');
 const getStream = require('get-stream');
+const inquirer = require('inquirer');
+const semver = require('semver')
+const stripAnsi = require('strip-ansi');
 const _ = require('lodash');
 
-const addDelimiter = '\u001b[32m  \u001b[32m+\u001b[0m \u001b[32m';
-const deleteDelimiter = '\u001b[31m  \u001b[31m-\u001b[0m \u001b[31m';
-const toTrim = '\u001b[0m';
+const tfVersionRegex = /Terraform v(.*)/;
+
+// terraform v0.11
+const addRegexV11 = /  + (.*)/;
+const deleteRegexV11 = /  - (.*)/;
+
+// terraform v0.12
+const addRegexV12 = /  # (.*) will be created/;
+const deleteRegexV12 = /  # (.*) will be destroyed/;
 
 (async function run() {
   try {
@@ -19,19 +27,30 @@ const toTrim = '\u001b[0m';
 })();
 
 async function parsePlan() {
-  const stdout = await shell('terraform plan');
+  const tfVersionOut = await shell('terraform version', false);
+  const tfVersion = tfVersionOut.match(tfVersionRegex)[1];
+  console.info(`Runnning on Terraform v${tfVersion}`);
 
-  const toAdd = parseResource(stdout, addDelimiter);
-  const toDelete = parseResource(stdout, deleteDelimiter);
+  let tfPlanOut = await shell('terraform plan');
+  tfPlanOut = stripAnsi(tfPlanOut);
+
+  let addRegex = addRegexV12
+  let deleteRegex = deleteRegexV12
+  if (semver.lt(tfVersion, '0.12.0')) {
+    addRegex = addRegexV11
+    deleteRegex = deleteRegexV11
+  }
+  const toAdd = parseResource(tfPlanOut, addRegex);
+  const toDelete = parseResource(tfPlanOut, deleteRegex);
 
   return { toAdd, toDelete };
 }
 
-function parseResource(stdout, delimiter) {
-  return stdout
+function parseResource(tfPlan, regex) {
+  return tfPlan
     .split('\n')
-    .filter(s => s.includes(delimiter))
-    .map(s => s.replace(delimiter, '').replace(toTrim, ''));
+    .filter(s => regex.test(s))
+    .map(s => s.match(regex)[1]);
 }
 
 async function prompt(plan) {
@@ -70,12 +89,14 @@ async function pickMove({ toDelete, toAdd }) {
   return { toDelete: toDeleteAfterMove, toAdd: toAddAfterMove };
 }
 
-function shell(command) {
+function shell(command, printOutput = true) {
   const [first, ...other] = command.split(' ');
   const { stdout, stderr } = execa(first, other);
 
-  stdout.pipe(process.stdout);
-  stderr.pipe(process.stderr);
+  if (printOutput) {
+    stdout.pipe(process.stdout);
+    stderr.pipe(process.stderr);
+  }
 
   return getStream(stdout);
 }
