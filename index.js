@@ -73,12 +73,12 @@ async function pickMove({ toDelete, toAdd }) {
   const { from, to } = await inquirer.prompt([{
     type: 'list',
     name: 'from',
-    message: 'What move?',
+    message: 'Move from',
     choices: toDelete
   }, {
     type: 'list',
     name: 'to',
-    message: 'Move to:',
+    message: 'Move to  ',
     choices: toAdd
   }]);
   const toDeleteAfterMove = _.remove(toDelete, item => item !== from);
