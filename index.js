@@ -10,8 +10,8 @@ const _ = require('lodash');
 const tfVersionRegex = /Terraform v(.*)/;
 
 // terraform v0.11
-const addRegexV11 = /  + (.*)/;
-const deleteRegexV11 = /  - (.*)/;
+const addRegexV11 = /  \+ ((?!create).*)/;
+const deleteRegexV11 = /  - ((?!destroy).*)/;
 
 // terraform v0.12
 const addRegexV12 = /  # (.*) will be created/;
