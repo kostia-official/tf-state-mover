@@ -8,6 +8,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chalk": "^3.0.0",
     "debug": "^3.1.0",
     "execa": "^0.8.0",
     "get-stream": "^3.0.0",

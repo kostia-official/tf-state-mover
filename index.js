@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const chalk = require('chalk');
 const execa = require('execa');
 const getStream = require('get-stream');
 const inquirer = require('inquirer');
@@ -21,15 +22,16 @@ const deleteRegexV12 = /  # (.*) will be destroyed/;
   try {
     const plan = await parsePlan();
     await prompt(plan);
+    console.info(chalk.blue('Finishing moving resources'));
   } catch (err) {
-    console.error(err);
+    console.error(chalk.red(err));
   }
 })();
 
 async function parsePlan() {
   const tfVersionOut = await shell('terraform version', false);
   const tfVersion = tfVersionOut.match(tfVersionRegex)[1];
-  console.info(`Runnning on Terraform v${tfVersion}`);
+  console.info(chalk.blue(`Runnning on Terraform v${tfVersion}`));
 
   let tfPlanOut = await shell('terraform plan');
   tfPlanOut = stripAnsi(tfPlanOut);
