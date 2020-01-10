@@ -44,6 +44,8 @@ async function parsePlan() {
   }
   const toAdd = parseResource(tfPlanOut, addRegex);
   const toDelete = parseResource(tfPlanOut, deleteRegex);
+  toAdd.push(new inquirer.Separator())
+  toDelete.push(new inquirer.Separator())
 
   return { toAdd, toDelete };
 }
@@ -76,12 +78,14 @@ async function pickMove({ toDelete, toAdd }) {
     type: 'list',
     name: 'from',
     message: 'Move from',
-    choices: toDelete
+    choices: toDelete,
+    pageSize: Math.min(toDelete.length, 10)
   }, {
     type: 'list',
     name: 'to',
     message: 'Move to  ',
-    choices: toAdd
+    choices: toAdd,
+    pageSize: Math.min(toAdd.length, 10)
   }]);
   const toDeleteAfterMove = _.remove(toDelete, item => item !== from);
   const toAddAfterMove = _.remove(toAdd, item => item !== to);
@@ -104,5 +108,5 @@ function shell(command, printOutput = true) {
 }
 
 function isEmpty(object, key) {
-  return _.isEmpty(_.get(object, key));
+  return _.get(object, key).length === 1;
 }
